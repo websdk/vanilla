@@ -7,7 +7,7 @@ _This is currently under draft and not complete. Feedback welcome on the issue t
 
 This is a general pattern for authoring components that gives component developers the ability to create components and not worry that it can reliably reused in a wide range of contexts. This is a concern in an increasingly fragmented application framework landscape, and also with the advent of encapsulated Web Components which further tilts the balance in favour of writing reusable components rather than rewriting them for each framework.
 
-The primary design goals are to refine the boundaries/seams of components, and maximise the ergonomics of authoring components. This is to separate out the concerns of and enable further customisations and innovations to take place orthogonal to the implementation of components. For example, you may wish to take certain actions before a component renders such as pre-applying a related template or [inlining styles](http://blog.vjeux.com/2014/javascript/react-css-in-js-nationjs.html) or catch diffs after the component has run (more in the [rendering pipeline]()). The components are framework-agnostic, but not the lowest common denominator at the cost of being a long-term solution.
+The primary design goals are to refine the boundaries/seams of components, and maximise the ergonomics of authoring components. This is to separate out the concerns of and enable further customisations and innovations to take place orthogonal to the implementation of components. For example, you may wish to take certain actions before a component renders such as pre-applying a related template or [inlining styles](http://blog.vjeux.com/2014/javascript/react-css-in-js-nationjs.html) or invoking lifecyle hooks or catch diffs after the component has run. The components are framework-agnostic, but not the lowest common denominator at the cost of being a long-term solution.
 
 * [Spec]()
 <br>[i. Javascript]()
@@ -20,7 +20,7 @@ The primary design goals are to refine the boundaries/seams of components, and m
 <br>[iii. React]()
 <br>[iv. Angular et al]()
 <br>[v. Ripple]()
-* [Fractal Composition]()
+* [Composition and Fractals]()
 * [Example Repo]()
 * [Rendering Pipeline]()
 * [Testing]()
@@ -35,8 +35,6 @@ The primary design goals are to refine the boundaries/seams of components, and m
 export function component(data){ .. }
 ```
 
-**Zero Dependency Function:** This is the only necessary file. You should export just one function. Liberal usage of dependencies is a barrier to making widely reusable components, since an application consuming many public components _will_ end up with 27 versions of lodash, underscore and ramda. If you do need other dependencies, you should either use micro-libraries like modularised lodash or [utilise](https://github.com/utilise/utilise) that you can compile in, or require that they will be available at runtime (e.g. moment).
-
 **Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient. A better approach is to use `once` which will efficiently generate or update DOM to match what it should be:
 
 ```js
@@ -48,9 +46,12 @@ once(this)
 
 If you call this sequence twice, it will amount to a no-op the second time. If there are more `rows` it will only update those, etc. You can think of `once` as React in the form of a micro-library, with the difference that it operates on an individual element level, rather than on a view level. As a result, there is no need for [calculating/maintaining an in-memory representation of everything](https://github.com/reddit/reddit-mobile/issues/247#issuecomment-118202269). The D3-inspired API (expressing views as a function of data) is slightly higher level than React, JSX and Virtual DOM which maps 1:1 to HTML. You can read more about [the evolution of different approaches to rendering here](https://github.com/rijs/docs/blob/master/components.md#guide-to-writing-components).
 
-**Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the call). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
+**Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the cycle). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
 
-**Stateless:** You can use `this.state` for persisting local state between renders. The first argument will be an object with all the data the component requires to render. This is normally data that is not unique to this instance of the component and may be injected in from different sources depending on the application it is used in.
+**Stateless:** You can use `this.state` for persisting local state between renders. Components can always expect that the first argument will be an object with all the state and data the component requires to render. "Data" is normally things that are not unique to this instance of the component and may be injected in from different sources depending on the application it is used in.
+
+**Declarative:** Event handlers and component API should update the state object and then call `this.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `this.draw` hook can then be extended by frameworks to form their own [rendering pipeline](https://github.com/pemrouz/vanilla#rendering-pipeline) or simply stubbed in tests.
+
 
 <br>
 ### 2. Styling
@@ -71,9 +72,7 @@ this.on('event' d => { .. })
 this.emit('event', data)
 ```
 
-The final aspect is that child components will need to communicate with parent components. This is achieved by emitting events on the host node, as this is the only visible part to the parent (the component implementation may indeed be entirely hidden away in a closed Shadow DOM). You can use the native `addEventListener` and `dispatchEvent` for this. However, if you are using `once`, you can interchangeably use the [more ergonomic emitterify semantics](https://github.com/utilise/utilise#--emitterify), `.on` and `.emit`.
-
-Parents should not communicate with children in the same way. If something changes in a parent component that requires the child to update, it should redraw it with the new state (unidirectional architecture).
+The final aspect is that child components will need to communicate with parent components. This is achieved by emitting events on the host node, as this is the only visible part to the parent (the component implementation may indeed be entirely hidden away in a closed Shadow DOM). You can use the native `addEventListener` and `dispatchEvent` for this. However, if you are using `once`, you can interchangeably use the [more ergonomic emitterify semantics](https://github.com/utilise/utilise#--emitterify), `.on` and `.emit`. If something changes in a parent component that requires the child to update, it should redraw it with the new state (unidirectional architecture).
 
 <br><br>
 ## Usage
@@ -87,7 +86,7 @@ The simplest way to invoke a component is:
 fn.call(node, data)
 ```
 
-This is the pure, low-level API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of.
+This is the pure, low-level API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of. This API is also super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing).
 
 <br>
 ### D3
@@ -132,16 +131,18 @@ An alternative approach would be to precompile the functions, similar to how JSX
 <br>
 ### Angular 2 et al
 
-Angular 2 supports the usage of native Web Components and so you are encouraged to use them in that manner. A minimal build of Ripple (core + components) is only ~500 bytes. Alternatively, if the Angular 2 team were to allow the `template` hook to take a function rather than a string, you could write a similar wrapper to the React approach above.
+Angular 2, and now many other architectures, supports the usage of native Web Components and so you are encouraged to use them in that manner. A [minimal build of Ripple](https://github.com/rijs/minimal) (core + components) which you can use alongside your existing application architecture is as low as [~3 kB](https://github.com/rijs/minimal/blob/master/dist/ripple.pure.min.js.gz). Alternatively, if the Angular 2 team were to allow the `template` hook to take a function rather than a string or file, you could write a similar wrapper to the React approach above.
 
 <br>
 ### Ripple
 
-In Ripple, we simply register the component definition against the Custom Element name and then all instances of the element will be upgraded with this definition - leveraging the native Web Component callbacks where possible:
+In Ripple, the component definition is simply registered against the Custom Element name:
 
 ```js
 ripple('simple-component', simpleComponent)
 ```
+
+Then all instances of the element will be upgraded with this definition - leveraging the native Web Component callbacks where possible.
 
 You can then use the component via markup:
 
@@ -156,19 +157,21 @@ once(document.body)
   ('simple-component', { items: ['1', '2', '3']})
 ```
 
+The (D3) data here (second parameter) will be passed down to the component.
+
 If there is a matching CSS resource, it will also load and apply that (in either the Shadow Root or the `head`). You can also explicitly specify the CSS resources a view requires via the `[css]` attribute (these will be each converted to a style tag): 
 
 ```js
 <simple-component css="simple-component.css simple-component-extension.css">
 ```
 
-In addition to manually invoking a component with data, you can also declare the required data resources to inject into the element. This means that if that resource is updated, elements and their children that depend on it will also be redrawn (i.e. `document.querySelectorAll('[data=items]').map(ripple.draw)`). This is another simple technique that avoids the need to have a in-memory tree of the entire application.
+In addition to manually invoking a component with data, you can also declare the required data resources to inject into the element. This means that if that resource is updated, elements and their children that depend on it will also be redrawn (i.e. `document.querySelectorAll('[data=items]').map(d => d.draw())`). This is another simple technique that avoids the need to have a in-memory tree of the entire application.
 
 ```js
 <simple-component data="items">
 ```
 
-Ripple abstracts a tonne of convenient defaults such as async rendering via `requestAnimationFrame` to keep the UI responsive, batching duplicate renders, server side rendering, async loading and deduping of CSS modules, rendering in the Shadow DOM rather than the light DOM, automatic backpressure on clients to only load the fine-grained resources used, caching resources for instant startup times (before any network requests made), client-server-clients synchronisation, offline caching and background sync via Service Workers, hot reloading by redrawing elements if a new component definition is registered...
+Ripple modules abstract a tonne of other convenient defaults too such as async rendering via `requestAnimationFrame` to keep the UI responsive, batching duplicate renders, server side rendering, async loading and deduping of CSS modules, rendering in the Shadow DOM rather than the light DOM, automatic backpressure on clients to only load the fine-grained resources used, caching resources for instant startup times (app renders last-known-good-state before any network requests made), client-server-clients synchronisation, offline caching and background sync via Service Workers, hot reloading by redrawing elements if a new component definition is registered...
 
 ## Fractal Composition
 
@@ -179,14 +182,76 @@ This spec aims to make it convenient to package and reuse individual components 
 
 ## Testing
 
-Since each component is expected to convert any dataset into a particular representation, it becomes trivial to test Vanilla components in a more declarative manner. 
+Since each component is expected to convert any dataset into a particular representation, it becomes trivial to test Vanilla components in a more declarative and entirely framework/boilerplate-less manner. [See here for an example](https://github.com/vanillacomponents/ux-button/blob/master/test.js#L22-L34) of shallow unit tests and functional tests that invokes a component on a DOM node and then checks the output:
 
-..
+```js
+test('unit test - simple', t => {
+  t.plan(1)
+
+  const host = el('ux-button')
+  button.call(host, { label: 'foo' })
+
+  t.equal(host.outerHTML, strip`
+    <ux-button tabindex="-1" class="">
+      <span>foo</span>
+      <div class="spinner"></div>
+    </ux-button>
+  `)
+})
+```
+
+## Rendering Middleware
+
+During testing, you can set `el.draw = () => fn.call(el, el.state)` to test API's and event handlers which will attempt to redraw a component after changing some state. 
+
+In your application, you can extend this in a similar style to Koa middleware:
+
+> When a middleware invokes yield next the function suspends and passes control to the next middleware defined. After there are no more middleware to execute downstream, the stack will unwind and each middleware is resumed to perform its upstream behaviour.
+<br> — [Koa](http://koajs.com/)
+
+The general pattern is that you can replace the draw function with a function that takes the previous draw function and returns a new function that will be invoked with the element. Then you can perform some action in your middleware before (and after) calling the `next` (the previous draw) function. You can do this repeatedly to add different middleware. When a component's draw function is then invoked, it will then run through each middleware and step down to the next one via all the `next(el)` calls and once the component is rendered, the stack will unwind and each middleware will take perform their post-render operations. Each middleware should also return the result of the next, or nothing if it decides to stop the render. By composing the return values, it's possible to tell if the element rendered (element returned) or at least one middleware bailed (nothing returned):
+
+```js
+el.draw = middleware(el.draw)
+
+const middleware = next => el => {
+  // do something with el before
+  return next(el)
+  // or also do something with el after
+}
+```
+
+In your application, you will likely want to point the draw function a single and more dynamic `draw` function (e.g. `ripple.draw`) rather than individually extending each component's draw function. Middleware should progressively enhance and optimise and components should always work without them. Few examples of rendering middleware:
+
+* [PreCSS](https://github.com/rijs/precss/blob/master/src/index.js#L17-L45) - Transforms and applies component CSS 
+* [Shadow](https://github.com/rijs/shadow#ripple--shadow-dom) - Creates and renders into the Shadow DOM rather than the Light DOM 
+* [Features](https://github.com/rijs/features) - Extends a component with other components/features (mixins)
+* [Memoize](https://github.com/rijs/memoize) - Checks if (immutable) data hasn't changed and skips the render if so (essentially `shouldComponentUpdate`)
+
+You can also use this provide hooks for extra life cycle functions. For example, for React:
+
+```js
+draw = next => el => {
+  
+  if (hasChanged(el.state)) componentWillReceiveProps()
+
+  if (!shouldComponentUpdate(el)) return
+
+  if (isDetached(el)) componentWillMount()
+  
+  componentWillUpdate()
+  
+  var rendered = next(el)
+
+  if (rendered && wasDetached(el)) componentDidMount()
+
+  if (rendered) componentDidUpdate()
+
+  if (isDetached(el)) componentWillUnmount()
+
+}
+```
 
 ## Example Repo
 
 ..
-
-## Rendering Pipeline
-
-.. 
