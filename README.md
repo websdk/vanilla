@@ -227,6 +227,7 @@ In your application, you will likely want to point the draw function a single an
 * [Shadow](https://github.com/rijs/shadow#ripple--shadow-dom) - Creates and renders into the Shadow DOM rather than the Light DOM 
 * [Features](https://github.com/rijs/features) - Extends a component with other components/features (mixins)
 * [Memoize](https://github.com/rijs/memoize) - Checks if (immutable) data hasn't changed and skips the render if so (essentially `shouldComponentUpdate`)
+* [Backpressure](https://github.com/rijs/backpressure/blob/master/src/index.js) - Fetches component implementations from the server as they are attempted to be drawn.
 
 You can also use this provide hooks for extra life cycle functions. For example, for React:
 
