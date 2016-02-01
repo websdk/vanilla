@@ -35,16 +35,7 @@ The primary design goals are to refine the boundaries/seams of components, and m
 export function component(data){ .. }
 ```
 
-**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient. A better approach is to use `once` which will efficiently generate or update DOM to match what it should be:
-
-```js
-once(this)
- ('tr', rows)
-   ('td', row => row.cells)
-     .text(String)
-```
-
-If you call this sequence twice, it will amount to a no-op the second time. If there are more `rows` it will only update those, etc. You can think of `once` as React in the form of a micro-library, with the difference that it operates on an individual element level, rather than on a view level. As a result, there is no need for [calculating/maintaining an in-memory representation of everything](https://github.com/reddit/reddit-mobile/issues/247#issuecomment-118202269). The D3-inspired API (expressing views as a function of data) is slightly higher level than React, JSX and Virtual DOM which maps 1:1 to HTML. You can read more about [the evolution of different approaches to rendering here](https://github.com/rijs/docs/blob/master/components.md#guide-to-writing-components).
+**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn1" href="#fn1-more">[1]</a>. 
 
 **Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the cycle). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
 
@@ -256,3 +247,20 @@ draw = next => el => {
 ## Example Repo
 
 ..
+
+## Footnotes
+
+<a name="fn1-more" href="#fn1">**[1]**</a> Instead of `.innerHTML`, you could use jQuery and control statements (e.g. `if`) to narrow down which areas to update. But this imperative approach spawns many code paths, quickly leading to spaghetti code. You could use some form of templating to improve on that like Handlebars or JSX, but this comes at the cost of a new syntax and a compilation step.
+
+A better approach is to use [`once`](https://github.com/utilise/once#once), which combines the best of both (declarative and JS):
+
+* Once will **efficiently generate or update DOM** to match what it should be, making as minimal modifications as necessary
+* Once is a **small library** (not a framework)
+* Once is **JavaScript** (no new language syntax or compilation step)
+* Once is **declarative** (no spaghetti code)
+* Once is **versatile** (arbitrary selectors or even functions)
+* Once is **composable** (each invocation returns a new selection of parents)
+* Once is one of the [**fastest approaches**](http://mathieuancelin.github.io/js-repaint-perfs/) to rendering
+* The **data driven**, D3-inspired API (expressing views as a function of data) is slightly higher level than markup-based templates, React, JSX and Virtual DOM which maps 1:1 to HTML. 
+
+You can read more about [the evolution of different approaches to rendering here](https://github.com/rijs/docs/blob/master/components.md#guide-to-writing-components).
