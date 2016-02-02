@@ -59,11 +59,11 @@ Component styles should be co-located with the component. Additional styles or s
 
 ```js
 // Communicate
-this.on('event' d => { .. })
-this.emit('event', data)
+this.addEventListener('event', d => { .. })
+this.dispatchEvent(event)
 ```
 
-The final aspect is that child components will need to communicate with parent components. This is achieved by emitting events on the host node, as this is the only visible part to the parent (the component implementation may indeed be entirely hidden away in a closed Shadow DOM). You can use the native `addEventListener` and `dispatchEvent` for this. However, if you are using `once`, you can interchangeably use the [more ergonomic emitterify semantics](https://github.com/utilise/utilise#--emitterify), `.on` and `.emit`. If something changes in a parent component that requires the child to update, it should redraw it with the new state (unidirectional architecture).
+The final aspect is that child components will need to communicate with parent components. This is achieved by emitting events on the host node, as this is the only visible part to the parent (the component implementation may indeed be entirely hidden away in a closed Shadow DOM). You can use the native `addEventListener` and `dispatchEvent` for this <a name="fn4" href="#fn4-more">[4]</a>. If something changes in a parent component that requires the child to update, it should redraw it with the new state (unidirectional architecture).
 
 <br><br>
 ## Usage
@@ -274,3 +274,17 @@ A better approach is to use [`once`](https://github.com/utilise/once#once), whic
 * The **data driven**, D3-inspired API (expressing views as a function of data) is slightly higher level than markup-based templates, React, JSX and Virtual DOM which maps 1:1 to HTML. 
 
 You can read more about [the evolution of different approaches to rendering here](https://github.com/rijs/docs/blob/master/components.md#guide-to-writing-components).
+
+<a name="fn4-more" href="#fn4">**[4]**</a> The native events API can be a little bit more verbose and restrictive than necessary. If you are using `once`, you can interchangeably use the [more ergonomic emitterify semantics](https://github.com/utilise/utilise#--emitterify), `.on` and `.emit` on any selection it returns. `.emit` will create and dispatch a `CustomEvent` with the specified `type` and `detail` (or default to the element's state). `.on` will allow you to register multiple listeners for the same event and to also use namespaces.
+
+```js
+once(this)
+  .on('event' d => { .. })
+  .emit('event', data)
+
+once(this)
+  ('li', [1, 2, 3])              // create some elements first
+    .on('event.ns1' d => { .. }) // multiple, namespaced handlers
+    .on('event.ns2' d => { .. })
+    .emit('event', data)
+```
