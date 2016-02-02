@@ -35,11 +35,11 @@ The primary design goals are to refine the boundaries/seams of components, and m
 export function component(data){ .. }
 ```
 
-**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn1" href="#fn1-more">[1]</a>. 
+**Stateless:** Components can always expect that `this` is the DOM node being operated on and the first parameter will be an object with all the state and data <a name="fn1" href="#fn1-more">[1]</a> the component requires to render. This makes components agnostic as to how or where the first argument is injected, which simplifies testing and allows frameworks to co-ordinate linking state with elements in different ways <a name="fn2" href="#fn2-more">[2]</a>. 
+
+**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn3" href="#fn3-more">[3]</a>. 
 
 **Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the cycle). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
-
-**Stateless:** You can use `this.state` for persisting local state between renders. Components can always expect that the first argument will be an object with all the state and data the component requires to render. "Data" is normally things that are not unique to this instance of the component and may be injected in from different sources depending on the application it is used in.
 
 **Declarative:** Event handlers and component API should update the state object and then call `this.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `this.draw` hook can then be extended by frameworks to form their own [rendering pipeline](https://github.com/pemrouz/vanilla#rendering-pipeline) or simply stubbed in tests.
 
@@ -250,7 +250,17 @@ draw = next => el => {
 
 ## Footnotes
 
-<a name="fn1-more" href="#fn1">**[1]**</a> Instead of `.innerHTML`, you could use jQuery and control statements (e.g. `if`) to narrow down which areas to update. But this imperative approach spawns many code paths, quickly leading to spaghetti code. You could use some form of templating to improve on that like Handlebars or JSX, but this comes at the cost of a new syntax and a compilation step.
+<a name="fn1-more" href="#fn1">**[1]**</a> "State" normally refers to things that are unique to this instance of the component, such as it's scroll position or whether it is focused or not. "Data" is normally used to refer to things that are not unique to this instance of the component. They may be shared with other components and may be injected in from different sources depending on the application it is used in.
+
+<a name="fn2-more" href="#fn2">**[2]**</a> There are a few common strategies around persisting state between renders:
+
+* The `state` object is held privately in a parent closure and is modified externally via specific accessors. This is the approach outlined in [_Towards Reusable Charts_](http://bost.ocks.org/mike/chart/). In that paradigm, the components in this spec are identical to the inner functions.
+
+* The `state` object is managed with the help of some secondary structure that roughly matches the structure of the DOM. This is the virtual DOM approach used by React. In that paradigm, the components in this spec are equivalent to just the `render` function.
+
+* The `state` object for an element is co-located with the element itself (i.e. `this.state == state`). This is the approach used by Ripple. In that paradigm, by eliminating the need for any closures or secondary structures, a component is just the pure transformation function of data. This also means you can inspect the state of element by checking `$0.state`.
+
+<a name="fn3-more" href="#fn3">**[3]**</a> Instead of `.innerHTML`, you could use jQuery and control statements (e.g. `if`) to narrow down which areas to update. But this imperative approach spawns many code paths, quickly leading to spaghetti code. You could use some form of templating to improve on that like Handlebars or JSX, but this comes at the cost of a new syntax and a compilation step.
 
 A better approach is to use [`once`](https://github.com/utilise/once#once), which combines the best of both (declarative and JS):
 
