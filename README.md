@@ -61,6 +61,8 @@ If you need to default and set initial values on the state object only the first
 
 Component styles should be co-located with the component. Additional styles or skins can be provided as a separate file (`component-modifier.css` or `some-feature.css`). The styles should be written in the [Web Component syntax](http://www.html5rocks.com/en/tutorials/webcomponents/shadowdom-201/) and should work if they were used accordingly (i.e. within a Shadow DOM). There are various modules that interpret these in different ways as a separate concern: apply conventions, dedupe, compile, scope for non-shadow dom browsers, inline, etc. 
 
+You will want a mix of styles to be inherited and not inherited. To make styling robust across different environments, the root element [should defensively set](https://github.com/vanillacomponents/ux-button/blob/master/ux-button.css#L2-L17) all the unwanted styles which may leak into the component. It should then [explicitly set those it does wish to inherit](https://github.com/vanillacomponents/ux-button/blob/master/ux-button.css#L17) by setting their value to `inherit`, such as `font-size: inherit` etc. Where possible, it's also recommended to [use `em`](https://github.com/vanillacomponents/ux-button/blob/master/ux-button.css#L15-L16) to make components responsive to their immediate context.
+
 <br>
 ### 3. Communication
 
