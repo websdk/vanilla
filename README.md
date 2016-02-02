@@ -43,6 +43,13 @@ export function component(data){ .. }
 
 **Declarative:** Event handlers and component API should update the state object and then call `this.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `this.draw` hook can then be extended by frameworks to form their own [rendering pipeline](https://github.com/pemrouz/vanilla#rendering-pipeline) or simply stubbed in tests.
 
+**Defaults:** Default values for state can simply be set using the native ES6 syntax:
+
+```js
+function component({ color = 'red', focused = false }){ ... }
+```
+
+If you need to default and set initial values on the state object only the first time you can use a [helper function](https://github.com/utilise/utilise#--defaults). The same technique can be used to idempotently expose your component API.
 
 <br>
 ### 2. Styling
