@@ -37,7 +37,7 @@ export function component(data){ .. }
 
 **Stateless:** Components can always expect that `this` is the DOM node being operated on and the first parameter will be an object with all the state and data <a name="fn1" href="#fn1-more">[1]</a> the component requires to render. This makes components agnostic as to how or where the first argument is injected, which simplifies testing and allows frameworks to co-ordinate linking state with elements in different ways <a name="fn2" href="#fn2-more">[2]</a>. 
 
-**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn3" href="#fn3-more">[3]</a>. 
+**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn3" href="#fn3-more">[3]</a>. A component should not update anything above and beyond it's own scope (`this`).
 
 **Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the cycle). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
 
