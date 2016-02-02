@@ -152,13 +152,13 @@ The (D3) data here (second parameter) will be passed down to the component.
 
 If there is a matching CSS resource, it will also load and apply that (in either the Shadow Root or the `head`). You can also explicitly specify the CSS resources a view requires via the `[css]` attribute (these will be each converted to a style tag): 
 
-```js
+```html
 <simple-component css="simple-component.css simple-component-extension.css">
 ```
 
 In addition to manually invoking a component with data, you can also declare the required data resources to inject into the element. This means that if that resource is updated, elements and their children that depend on it will also be redrawn (i.e. `document.querySelectorAll('[data=items]').map(d => d.draw())`). This is another simple technique that avoids the need to have a in-memory tree of the entire application.
 
-```js
+```html
 <simple-component data="items">
 ```
 
