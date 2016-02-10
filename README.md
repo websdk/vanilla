@@ -35,7 +35,7 @@ The primary design goals are to refine the boundaries/seams of components, and m
 export function component(data){ .. }
 ```
 
-**Stateless:** Components can always expect that `this` is the DOM node being operated on and the first parameter will be an object with all the state and data <a name="fn1" href="#fn1-more">[1]</a> the component requires to render. This makes components agnostic as to how or where the first argument is injected, which simplifies testing and allows frameworks to co-ordinate linking state with elements in different ways <a name="fn2" href="#fn2-more">[2]</a>. 
+**Stateless:** Components are just plain old functions. It can always expect that `this` is the DOM node being operated on and the first parameter will be an object with all the state and data <a name="fn1" href="#fn1-more">[1]</a> the component requires to render. This makes components agnostic as to how or where the first argument is injected, which simplifies testing and allows frameworks to co-ordinate linking state with elements in different ways <a name="fn2" href="#fn2-more">[2]</a>. 
 
 **Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn3" href="#fn3-more">[3]</a>. A component should not update anything above and beyond it's own scope (`this`).
 
@@ -221,7 +221,7 @@ const middleware = next => el => {
 }
 ```
 
-In your application, you will likely want to point the draw function a single and more dynamic `draw` function (e.g. `ripple.draw`) rather than individually extending each component's draw function. Middleware should progressively enhance and optimise and components should always work without them. Few examples of rendering middleware:
+In your application, you will likely want to point the component draw function to a single and more dynamic `draw` function (e.g. `ripple.draw`) rather than individually extending each component's draw function. Middleware should progressively enhance and optimise and components should always work without them. Few examples of rendering middleware:
 
 * [PreCSS](https://github.com/rijs/precss/blob/master/src/index.js#L17-L45) - Transforms and applies component CSS 
 * [Shadow](https://github.com/rijs/shadow#ripple--shadow-dom) - Creates and renders into the Shadow DOM rather than the Light DOM 
