@@ -17,8 +17,8 @@ The primary design goals are to refine the boundaries/seams of components, and m
 * [**Using**](#using)
 <br>[i. Vanilla Component](#1-vanilla-component)
 <br>[ii. Composing an Application](#2-composing-an-application)
-<br>[iii. Performance](#3-javascript)
-<br>[iv. Testing](#4-testing)
+<br>[iii. Testing](#3--testing)
+<br>[iv. Performance](#4-performance)
 * [Example Repo](#example-repo)
 * [Footnotes](#footnotes)
 
