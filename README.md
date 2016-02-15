@@ -10,15 +10,15 @@ This is a general pattern for authoring components that gives component develope
 The primary design goals are to refine the boundaries/seams of components, and maximise the ergonomics of authoring components. This is to separate out the concerns of and enable further customisations and innovations to take place orthogonal to the implementation of components. For example, you may wish to take certain actions before a component renders such as pre-applying a related template or inlining styles or invoking lifecyle hooks or catch diffs after the component has run. The components are framework-agnostic, but not the lowest common denominator at the cost of being a long-term solution.
 
 * [**Authoring**](#authoring)
-[i. Javascript](#1-javascript)
-[ii. Styling](#2-styling)
-[iii. Communication](#3-communication)
+<br>[i. Javascript](#1-javascript)
+<br>[ii. Styling](#2-styling)
+<br>[iii. Communication](#3-communication)
 
 * [**Using**](#using)
-[i. Vanilla Component](#1-vanilla-component)
-[ii. Composing an Application](#2-composing-an-application)
-[iii. Testing](#3-testing)
-[iv. Performance](#4-javascript)
+<br>[i. Vanilla Component](#1-vanilla-component)
+<br>[ii. Composing an Application](#2-composing-an-application)
+<br>[iii. Performance](#3-javascript)
+<br>[iv. Testing](#4-testing)
 * [Example Repo](#example-repo)
 * [Footnotes](#footnotes)
 
@@ -38,7 +38,7 @@ export default function component(data){ .. }
 
 **Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the cycle). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
 
-**Declarative:** Event handlers and component API should update the state object and then call `this.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `this.draw` hook can then be extended by frameworks to form their own [rendering pipeline](https://github.com/pemrouz/vanilla#rendering-pipeline) or simply stubbed in tests.
+**Declarative:** Event handlers and component API should update the state object and then call `this.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `this.draw` hook can then be extended by frameworks to form their own [rendering pipeline](#rendering-middleware) or simply stubbed in tests.
 
 **Defaults:** Default values for state can simply be set using the native ES6 syntax:
 
