@@ -83,7 +83,7 @@ The simplest way to invoke a component is:
 fn.call(node, data)
 ```
 
-This is the pure, low-level, 100%-dependency free API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of. This API is super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing), and makes it possible to use these components in existing libraries/frameworks, such as D3 <a name="fn5-more" href="#fn5">**[5]**</a>, React <a name="fn6-more" href="#fn6">**[6]**</a>, Angular 2 <a name="fn7-more" href="#fn7">**[7]**</a>, etc. 
+This is the pure, low-level, 100%-dependency free API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of. This API is super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing), and makes it possible to use these components in existing libraries/frameworks, such as D3 <a name="fn5" href="#fn5-more">[5]</a>, React <a name="fn6" href="#fn6-more">[6]</a>, Angular 2 <a name="fn7" href="#fn7-more">[7]</a>, etc. 
 
 <br>
 ### 2. Composing an Application
