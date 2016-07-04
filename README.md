@@ -83,7 +83,7 @@ The simplest way to invoke a component is:
 fn.call(node, data)
 ```
 
-This is the pure, low-level, 100%-dependency free API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of. This API is super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing), and makes it possible to use these components in existing libraries/frameworks, such as D3 <a name="fn5-more" href="#fn5">**[5]**</a>, React <a name="fn6-more" href="#fn6">**[6]**</a>, Angular 2 <a name="fn7-more" href="#fn7">**[7]**</a>, etc. 
+This is the pure, low-level, 100%-dependency free API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of. This API is super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing), and makes it possible to use these components in existing libraries/frameworks, such as D3 <a name="fn5-more" href="#fn5">**[5]**</a>, React <a name="fn6-more" href="#fn6">**[6]**</a>, Angular 1 <a name="fn7-more" href="#fn7">**[7]**</a>, Angular 2 <a name="fn8-more" href="#fn8">**[8]**</a>, etc. 
 
 <br>
 ### 2. Composing an Application
@@ -103,9 +103,9 @@ Which may expand to:
   <grid-main>
 ```
 
-And each custom element may in turn further expand itself. This leads to a simple unidirectional and fractal architecture <a name="fn8" href="#fn8-more">[8]</a>. 
+And each custom element may in turn further expand itself. This leads to a simple unidirectional and fractal architecture <a name="fn9" href="#fn9-more">[9]</a>. 
 
-To facilitate this recursive expansion across components, [Ripple Minimal](https://github.com/rijs/minimal/) can be used as a small utility library <a name="fn9" href="#fn9-more">[9]</a>.
+To facilitate this recursive expansion across components, [Ripple Minimal](https://github.com/rijs/minimal/) can be used as a small utility library <a name="fn10" href="#fn10-more">[10]</a>.
 
 <br>
 ### 3.  Testing
@@ -215,13 +215,15 @@ function reactify(fn) {
 
 An alternative approach would be to precompile the functions, similar to how JSX desugars to normal React code.
 
-<a name="fn7-more" href="#fn7">**[7]**</a> **Angular 2:** Angular 2, and now many other architectures, supports the usage of native Web Components and so you are encouraged to use them in that manner. A [minimal build of Ripple](https://github.com/rijs/minimal) (core + components) which you can use alongside your existing application architecture is as low as [~3 kB](https://github.com/rijs/minimal/blob/master/dist/ripple.pure.min.js.gz). Alternatively, if the Angular 2 team were to allow the `template` hook to take a function rather than a string or file, you could write a similar wrapper to the React approach above.
+<a name="fn7-more" href="#fn7">**[7]**</a> **Angular 1:** You can create a generic directive to be used on a Custom Element. The directive can invoke the element with the data from the scope when they change and proxy events.
 
-<a name="fn8-more" href="#fn8">**[8]**</a> [Unidirectional User Interface Architectures](http://staltz.com/unidirectional-user-interface-architectures.html)
+<a name="fn8-more" href="#fn8">**[8]**</a> **Angular 2:** Angular 2, and now many other architectures, supports the usage of native Web Components and so you are encouraged to use them in that manner. A [minimal build of Ripple](https://github.com/rijs/minimal) (core + components) which you can use alongside your existing application architecture is as low as [~3 kB](https://github.com/rijs/minimal/blob/master/dist/ripple.pure.min.js.gz). Alternatively, if the Angular 2 team were to allow the `template` hook to take a function rather than a string or file, you could write a similar wrapper to the React approach above.
+
+<a name="fn9-more" href="#fn9">**[9]**</a> [Unidirectional User Interface Architectures](http://staltz.com/unidirectional-user-interface-architectures.html)
 
 > A unidirectional architecture is said to be fractal if subcomponents are structured in the same way as the whole is. In fractal architectures, the whole can be naively packaged as a component to be used in some larger application.
 
-<a name="fn9-more" href="#fn9">**[9]**</a> **Ripple (Minimal):** Ripple is made up of a simple core module to hold the global state of the application, that can also be extended by other modules:
+<a name="fn10-more" href="#fn10">**[10]**</a> **Ripple (Minimal):** Ripple is made up of a simple core module to hold the global state of the application, that can also be extended by other modules:
 
 ```js
 ripple(name, body)                     // setter
