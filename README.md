@@ -15,10 +15,13 @@ The primary design goals are to refine the boundaries/seams of components, and m
 <br>[iii. Communication](#3-communication)
 
 * [**Using**](#using)
-<br>[i. Vanilla Component](#1-vanilla-component)
-<br>[ii. Composing an Application](#2-composing-an-application)
-<br>[iii. Testing](#3--testing)
-<br>[iv. Performance](#4-performance)
+<br>[i. Vanilla](#1-vanilla-component)
+<br>[ii. Ripple](#2-ripple)
+<br>[iii. D3](#3-d3)
+<br>[iv. React](#4-react)
+<br>[v. Angular](#5-angular)
+* [Testing](#testing)
+* [Performance](#performance)
 * [Example Repo](#example-repo)
 * [Footnotes](#footnotes)
 
@@ -79,22 +82,32 @@ The final aspect is that child components will need to communicate with parent c
 The simplest way to invoke a component is:
 
 ```js
-// Invoke
-fn.call(node, data)
+import { component } from 'component'
+component.call(node, data)
 ```
 
-This is the pure, low-level, 100%-dependency free API which you probably will not use regularly, but [application frameworks can use](https://github.com/rijs/components/blob/master/src/index.js#L94) to build their own conventions on top of. This API is super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing), and makes it possible to use these components in existing libraries/frameworks, such as D3 <a name="fn5-more" href="#fn5">**[5]**</a>, React <a name="fn6-more" href="#fn6">**[6]**</a>, Angular 1 <a name="fn7-more" href="#fn7">**[7]**</a>, Angular 2 <a name="fn8-more" href="#fn8">**[8]**</a>, etc. 
+This is the pure, low-level, 100% dependency free API. You just `require`/`import` the component function and invoke it on an element with some data. Similarly, you can load the styles by just including the stylesheet via `<link rel="stylesheet">` or `<style>`. This API is super-useful for [single-pass shallow unit testing](https://github.com/pemrouz/vanilla#testing) or application frameworks to build upon.
 
 <br>
-### 2. Composing an Application
+### 2. [Ripple](https://github.com/rijs/minimal#minimal)
 
-The previous section describes rendering a single component. With components as simple functions that transform some data to a HTML representation, we can write an application as another component that composes other components (which in turn may compose other components). For example, we may have the following application/component:
+Ripple allows you to use these components as Web Components:
+
+```js
+ripple(require('component')) // load all the resources the component exports
+
+component = document.body.appendChild(document.createElement('component'))
+component.state = { ... }
+component.draw()
+```
+
+By having a consistent contract across components (set `state`, then `.draw`), this makes it easy to compose independent components. For example, you could have the following application/component:
 
 ```html
 <app-vanilla>
 ```
 
-Which may expand to:
+Which expands to:
 
 ```html
 <app-vanilla>
@@ -103,12 +116,56 @@ Which may expand to:
   <grid-main>
 ```
 
-And each custom element may in turn further expand itself. This leads to a simple unidirectional and fractal architecture <a name="fn9" href="#fn9-more">[9]</a>. 
+And each custom element may in turn further expand itself. This leads to a simple unidirectional and fractal architecture <a name="fn5" href="#fn5-more">[5]</a>. 
 
-To facilitate this recursive expansion across components, [Ripple Minimal](https://github.com/rijs/minimal/) can be used as a small utility library <a name="fn10" href="#fn10-more">[10]</a>.
+Note: If you use [once](https://github.com/utilise/once#once), it will efficiently create or update elements to match your data and also then redraw them:
+
+```js
+once(document.body)
+  ('component', [{ .. }, { .. }, { .. }])
+```
 
 <br>
-### 3.  Testing
+### 3. D3
+
+Works out of the box with the D3 `.each` signature:
+
+```js
+d3.select(node)
+  .datum(data)
+  .each(component)
+```
+
+<br>
+### 4. React
+
+You can use [React Faux DOM](https://github.com/Olical/react-faux-dom) to invoke these components within React:
+
+```js
+import { component } from 'component'
+
+const reactComponent = reactify(component)
+
+ReactDOM.render(React.createElement(reactComponent, { .. }), mountNode)
+
+function reactify(fn) {
+  return function(state) {
+    var el = ReactFauxDOM.createElement('div')
+    fn.call(el, state)
+    return el.toReact()
+  }
+}
+```
+
+An alternative approach would be to precompile the functions, similar to how JSX desugars to normal React code.
+
+<br>
+### 5. Angular
+
+You can create a generic directive to invoke the element with the data from the scope when they change and proxy events.
+
+<br>
+# Testing
 
 Due to the simplified nature of these components (plain functions of data) it becomes (a) drastically simpler to test (b) free of any library/framework/boilerplate and (c) increases the scope of what we can test. Below is several levels of component testing maturity:
 
@@ -124,10 +181,10 @@ Due to the simplified nature of these components (plain functions of data) it be
 
 1. **CI Tests**: You should [set up your CI to run your tests on the browsers you support](https://travis-ci.org/vanillacomponents/ux-input/builds/109224330#L1357). Popper will soon [generate badges from your latest CI logs](https://github.com/pemrouz/popper/issues/10). 
 
-1. **System Testing**: Since the entire application at any point in time can be replicated from a given dataset, and all actions simply transition from one state to another, you can conduct high-level tests on your entire application by rendering all components and in the same manner as you test individual components (test rendering with specific data, then test transitions between states).
+1. **System Testing**: Since the entire application at any point in time can be replicated from a given dataset, and all actions simply transition from one state to another, you can conduct high-level tests on your entire application by rendering all components and in the same manner as you test individual components (test rendering with specific data, then test transitions between states, whilst making assertions across components).
 
 <br>
-### 4. Performance
+# Performance
 
 There is no single way to benchmark performance across different libraries/frameworks for all use cases, but a popular test is the DBMonster Challenge (see [here for comparisons](http://mathieuancelin.github.io/js-repaint-perfs)). This should be taken with the usual caveats, but is at least useful as a proof-of-concept to confirm how fast this approach can be:
 
@@ -137,7 +194,11 @@ There is no single way to benchmark performance across different libraries/frame
 <br>
 # Example Repo
 
-An example component that covers all the above points is [available here](https://github.com/vanillacomponents/ux-input#ux-input).
+There are a [few example repo's](https://github.com/search?q=component-vanilla-green.svg&type=Code&utf8=%E2%9C%93) that covers all the above points:
+
+* [pemrouz/sweet-alert](https://github.com/pemrouz/sweet-alert#sweet-alert)
+* [pemrouz/d3-chosen](https://github.com/pemrouz/d3-chosen#d3-chosen)
+* [vanillacomponents/ux-input](https://github.com/vanillacomponents/ux-input#ux-input)
 
 <br>
 # Footnotes
@@ -181,148 +242,6 @@ once(this)
     .emit('event', data)
 ```
 
-<a name="fn5-more" href="#fn5">**[5]**</a> **D3:** Works out of the box with the D3 `.each` signature:
-
-```js
-d3.select(node)
-  .datum(data)
-  .each(component)
-```
-
-<a name="fn6-more" href="#fn6">**[6]**</a> **React:** You can use [React Faux DOM](https://github.com/Olical/react-faux-dom) to invoke these components within React (similar plumbing for the events will also be required):
-
-```js
-// Vanilla Component
-function simpleComponent(state){
-  once(this)
-    ('li', state.items)
-      .text(String)
-      .on('click.sth', d => this.emit('wat', 'foo') )
-}
-    
-const simpleReactComponent = reactify(simpleComponent)
-
-ReactDOM.render(React.createElement(simpleReactComponent, { items: ['1', '2', '3'] }), mountNode)
-
-function reactify(fn) {
-  return function(state) {
-    var el = ReactFauxDOM.createElement('div')
-    fn.call(el, state)
-    return el.toReact()
-  }
-}
-```
-
-An alternative approach would be to precompile the functions, similar to how JSX desugars to normal React code.
-
-<a name="fn7-more" href="#fn7">**[7]**</a> **Angular 1:** You can create a generic directive to be used on a Custom Element. The directive can invoke the element with the data from the scope when they change and proxy events.
-
-<a name="fn8-more" href="#fn8">**[8]**</a> **Angular 2:** Angular 2, and now many other architectures, supports the usage of native Web Components and so you are encouraged to use them in that manner. A [minimal build of Ripple](https://github.com/rijs/minimal) (core + components) which you can use alongside your existing application architecture is as low as [~3 kB](https://github.com/rijs/minimal/blob/master/dist/ripple.pure.min.js.gz). Alternatively, if the Angular 2 team were to allow the `template` hook to take a function rather than a string or file, you could write a similar wrapper to the React approach above.
-
-<a name="fn9-more" href="#fn9">**[9]**</a> [Unidirectional User Interface Architectures](http://staltz.com/unidirectional-user-interface-architectures.html)
+<a name="fn5-more" href="#fn5">**[5]**</a> [Unidirectional User Interface Architectures](http://staltz.com/unidirectional-user-interface-architectures.html)
 
 > A unidirectional architecture is said to be fractal if subcomponents are structured in the same way as the whole is. In fractal architectures, the whole can be naively packaged as a component to be used in some larger application.
-
-<a name="fn10-more" href="#fn10">**[10]**</a> **Ripple (Minimal):** Ripple is made up of a simple core module to hold the global state of the application, that can also be extended by other modules:
-
-```js
-ripple(name, body)                     // setter
-ripple(name)                           // getter
-ripple(name).on('change', res => ...)  // change
-```
-
-By listening to changes, [other modules](https://github.com/rijs/docs/blob/master/architecture.md#index-of-modules) build up other behaviour. This is how the [components module](https://github.com/rijs/components#ripple--components) reactively updates the page, when a component, it's data or it's styles changes. Components in turn can update resources in the Ripple core, which will in turn update anything that depends on it:
-
-![image](https://cloud.githubusercontent.com/assets/2184177/13036934/3d1b7b14-d36c-11e5-8ce7-1c5bb2403ea6.png)
-
-Whenever you register a component definition against a Custom Element name, all instances of the element will be upgraded (drawn) with this definition.
-
-```js
-ripple('simple-component', simpleComponent)
-```
-
-You can instantiate components via markup:
-
-```html
-<simple-component>
-```
-
-Or you can append a `simple-component` to the page with the specified data:
-
-```js
-once(document.body)
-  ('simple-component', { items: ['1', '2', '3']})
-```
-
-The (D3) data here (second parameter) will be passed down to the component. 
-
-If there is a matching CSS resource, it will also load and apply that (in either the Shadow Root or the `head`). You can also explicitly specify the CSS resources a view requires via the `[css]` attribute (these will be each converted to a style tag): 
-
-```html
-<simple-component css="simple-component.css simple-component-extension.css">
-```
-
-In addition to manually invoking a component with data, you can also declare the required data resources to inject into the element. This means that if that resource is updated, elements and their children that depend on it will also be redrawn (i.e. `document.querySelectorAll('[data=items]').map(d => d.draw())`). 
-
-```html
-<simple-component data="items">
-```
-
-These named data resources are useful for modelling your domain and synchronising them with the server. However, most of the time components will simply transform data they receive for their children, interpret gestures and bubble up events, dirty state and redraw themselves, which will result in themselves and all their children being rerendered:
-
-![image](https://cloud.githubusercontent.com/assets/2184177/13038726/7e675cd8-d38e-11e5-8215-92428676c935.png)
-
-##### Debugging
-
-You can inspect the state/data any component was last rendered with by just checking `$0.state` in the dev tools.
-
-##### Rendering Middleware
-
-Ripple points all the element `.draw` hooks to a generic `ripple.draw`, which rerenders an element. However, this can be extended in a similar style to Koa middleware:
-
-> When a middleware invokes yield next the function suspends and passes control to the next middleware defined. After there are no more middleware to execute downstream, the stack will unwind and each middleware is resumed to perform its upstream behaviour.
-<br> — [Koa](http://koajs.com/)
-
-The general pattern is that you can replace the draw function with a function that takes the previous draw function and returns a new function that will be invoked with the element. Then you can perform some action in your middleware before (and after) calling the `next` (the previous draw) function. You can do this repeatedly to add different middleware. When a component's draw function is then invoked, it will then run through each middleware and step down to the next one via all the `next(el)` calls and once the component is rendered, the stack will unwind and each middleware will take perform their post-render operations. Each middleware should also return the result of `next(el)`, or nothing if it decides to stop the render. By composing the return values, it's possible to tell if the element rendered (element returned) or at least one middleware bailed (nothing returned):
-
-```js
-ripple.draw = middleware(ripple.draw)
-
-const middleware = next => el => {
-  // do something with el before
-  return next(el)
-  // or also do something with el after
-}
-```
-
-Middleware should progressively enhance and optimise and components should always work without them. Few examples of rendering middleware:
-
-* [PreCSS](https://github.com/rijs/precss/blob/master/src/index.js#L17-L45) - Transforms and applies component CSS 
-* [Shadow](https://github.com/rijs/shadow#ripple--shadow-dom) - Creates and renders into the Shadow DOM rather than the Light DOM 
-* [Features](https://github.com/rijs/features) - Extends a component with other components/features (mixins)
-* [Memoize](https://github.com/rijs/memoize) - Checks if (immutable) data hasn't changed and skips the render if so (essentially `shouldComponentUpdate`)
-* [Backpressure](https://github.com/rijs/backpressure/blob/master/src/index.js) - Fetches component implementations from the server as they are attempted to be drawn.
-
-You can also use this to provide hooks for extra life cycle functions. For example, for React:
-
-```js
-draw = next => el => {
-  
-  if (hasChanged(el.state)) componentWillReceiveProps()
-
-  if (!shouldComponentUpdate(el)) return
-
-  if (isDetached(el)) componentWillMount()
-  
-  componentWillUpdate()
-  
-  var rendered = next(el)
-
-  if (rendered && wasDetached(el)) componentDidMount()
-
-  if (rendered) componentDidUpdate()
-
-  if (isDetached(el)) componentWillUnmount()
-
-}
-```
