@@ -196,6 +196,7 @@ There is no single way to benchmark performance across different libraries/frame
 
 There are a [few example repo's](https://github.com/search?q=component-vanilla-green.svg&type=Code&utf8=%E2%9C%93) that covers all the above points:
 
+* [pemrouz/markdown-editor](https://github.com/pemrouz/markdown-editor#markdow-editorpreviewer)
 * [pemrouz/sweet-alert](https://github.com/pemrouz/sweet-alert#sweet-alert)
 * [pemrouz/d3-chosen](https://github.com/pemrouz/d3-chosen#d3-chosen)
 * [vanillacomponents/ux-input](https://github.com/vanillacomponents/ux-input#ux-input)
