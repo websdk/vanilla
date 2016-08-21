@@ -32,21 +32,21 @@ The primary design goals are to refine the boundaries/seams of components, and m
 
 ```js
 /* Define - component.js */
-export default function component(data){ .. }
+export default function component(node, data){ .. }
 ```
 
-**Stateless:** Components are just plain old functions. It can always expect that `this` is the DOM node being operated on and the first parameter will be an object with all the state and data <a name="fn1" href="#fn1-more">[1]</a> the component requires to render. This makes components agnostic as to how or where the first argument is injected, which simplifies testing and allows frameworks to co-ordinate linking state with elements in different ways <a name="fn2" href="#fn2-more">[2]</a>. 
+**Stateless:** Components are just plain old functions. `node` is the DOM node being operated on and `data` is an object with all the state and data <a name="fn1" href="#fn1-more">[1]</a> the component requires to render. This makes components agnostic as to how or where the node/data is injected, which simplifies testing and allows frameworks to co-ordinate linking state with elements in different ways <a name="fn2" href="#fn2-more">[2]</a>. 
 
-**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `this.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn3" href="#fn3-more">[3]</a>. A component should not update anything above and beyond it's own scope (`this`).
+**Idempotent**: For a given dataset, the component should always result in the same representation. This means components should be written declaratively. `node.innerHTML = 'Hi!'` is perhaps the simplest example of this, but use of the `innerHTML` is not the most efficient <a name="fn3" href="#fn3-more">[3]</a>. A component should not update anything above and beyond it's own scope (`node`).
 
 **Serializable:** You should not hold any selections or state within the closure of the component (other than variables that will be used within that the cycle). These components are stamps. They will be applied to all instances of the same type. They may be invoked on the server and the client. They may be streamed over WebSockets. They may be cached in localStorage.
 
-**Declarative:** Event handlers and component API should update the state object and then call `this.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `this.draw` hook can then be extended by frameworks to form their own [rendering pipeline](#rendering-middleware) or simply stubbed in tests.
+**Declarative:** Event handlers and component API should update the state object and then call `node.draw` which will redraw the component. This is in contrast to modifying the DOM directly and greatly simplifies components by disentagling rendering logic from update logic. The `node.draw` hook can then be extended by frameworks to form their own [rendering pipeline](#rendering-middleware) or simply stubbed in tests.
 
 **Defaults:** Default values for state can simply be set using the native ES6 syntax:
 
 ```js
-function component({ color = 'red', focused = false }){ ... }
+function component(node, { color = 'red', focused = false }){ ... }
 ```
 
 If you need to default and set initial values on the state object only the first time you can use a [helper function](https://github.com/utilise/utilise#--defaults). The same technique can be used to idempotently expose your component API.
@@ -68,8 +68,8 @@ You will want a mix of styles to be inherited and not inherited. To make styling
 
 ```js
 // Communicate
-this.addEventListener('event', d => { .. })
-this.dispatchEvent(event)
+node.addEventListener('event', d => { .. })
+node.dispatchEvent(event)
 ```
 
 The final aspect is that child components will need to communicate with parent components. This is achieved by emitting events on the host node, as this is the only visible part to the parent (the component implementation may indeed be entirely hidden away in a closed Shadow DOM). You can use the native `addEventListener` and `dispatchEvent` for this <a name="fn4" href="#fn4-more">[4]</a>. If something changes in a parent component that requires the child to update, it should redraw it with the new state (unidirectional architecture).
@@ -128,12 +128,14 @@ once(document.body)
 <br>
 ### 3. D3
 
-Works out of the box with the D3 `.each` signature:
+Works very closely with the D3 `.each` signature (`component.call(node, data)` vs `component(node, data)`). You can use a helper function to convert the signature:
 
 ```js
+const th = fn => function(d){ fn(this, d) }
+
 d3.select(node)
   .datum(data)
-  .each(component)
+  .each(th(component))
 ```
 
 <br>
@@ -212,7 +214,7 @@ There are a [few example repo's](https://github.com/search?q=component-vanilla-g
 
 * The `state` object is managed with the help of some secondary structure that roughly matches the structure of the DOM. This is the virtual DOM approach used by React. In that paradigm, the components in this spec are equivalent to just the `render` function.
 
-* The `state` object for an element is co-located with the element itself (i.e. `this.state == state`). This is the approach used by Ripple. In that paradigm, by eliminating the need for any closures or secondary structures, a component is just the pure transformation function of data. This also means you can inspect the state of element by checking `$0.state`.
+* The `state` object for an element is co-located with the element itself (i.e. `node.state == state`). This is the approach used by Ripple. In that paradigm, by eliminating the need for any closures or secondary structures, a component is just the pure transformation function of data. This also means you can inspect the state of element by checking `$0.state`.
 
 <a name="fn3-more" href="#fn3">**[3]**</a> Instead of `.innerHTML`, you could use jQuery and control statements (e.g. `if`) to narrow down which areas to update. But this imperative approach spawns many code paths, quickly leading to spaghetti code. You could use some form of templating to improve on that like Handlebars or JSX, but this comes at the cost of a new syntax and a compilation step.
 
@@ -232,11 +234,11 @@ You can read more about [the evolution of different approaches to rendering here
 <a name="fn4-more" href="#fn4">**[4]**</a> The native events API can be a little bit more verbose and restrictive than necessary. If you are using `once`, you can interchangeably use the [more ergonomic emitterify semantics](https://github.com/utilise/utilise#--emitterify), `.on` and `.emit` on any selection it returns. `.emit` will create and dispatch a `CustomEvent` with the specified `type` and `detail` (or default to the element's state). `.on` will allow you to register multiple listeners for the same event and to also use namespaces.
 
 ```js
-once(this)
+once(node)
   .on('event' d => { .. })
   .emit('event', data)
 
-once(this)
+once(node)
   ('li', [1, 2, 3])              // create some elements first
     .on('event.ns1' d => { .. }) // multiple, namespaced handlers
     .on('event.ns2' d => { .. })
